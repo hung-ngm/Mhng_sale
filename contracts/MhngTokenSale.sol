@@ -1,9 +1,9 @@
-pragma solidity ^0.5.16;
+pragma solidity >=0.5.16;
 
 import "./MhngToken.sol";
 
 contract MhngTokenSale {
-  address admin;
+  address payable admin;
   MhngToken public tokenContract;
   uint256 public tokenPrice;
   uint256 public tokensSold;
@@ -33,5 +33,18 @@ contract MhngTokenSale {
     tokensSold += _numberOfTokens;
 
     emit Sell(msg.sender, _numberOfTokens);
+  }
+
+  // Ending Token MHNG Token sale
+  function endSale() public {
+    // Require admin
+    require(msg.sender == admin);
+
+    // Transfer remaining Mhng Tokens to admin
+    require(tokenContract.transfer(admin, address(tokenContract).balance));
+
+    // Destroy contract
+    selfdestruct(admin);
+
   }
 }

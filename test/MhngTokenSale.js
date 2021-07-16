@@ -58,4 +58,31 @@ contract('MhngTokenSale', (accounts) => {
       assert(error.message, 'cannot purchase more than available')
     })
   })
+
+  it('ends token sale', () => {
+    return MhngToken.deployed().then((instance) => {
+      tokenInstance = instance;
+      return MhngTokenSale.deployed()
+    }).then((instance) => {
+      tokenSaleInstance = instance;
+      // Try to end token sale from account other than the admin
+      return tokenSaleInstance.endSale({ from: buyer })
+    }).then(assert.fail).catch((error) => {
+      assert(error.message.toString().indexOf('revert') >= 0, 'must be admin to end sale')
+      
+      // End sale as admin
+      return tokenSaleInstance.endSale({ from: admin })
+    }).then((receipt) => {
+      return tokenInstance.balanceOf(admin)
+    }).then((balance) => {
+      assert.equal(balance.toNumber(), 250000, 'returns all unsold Mhng tokens to admin');
+      // Check that token price was reset when selfDestruct was called
+      return tokenSaleInstance.tokenPrice()
+    }).then((price) => {
+      assert.equal(price.toNumber(), 0, 'token price was reset')
+    })
+  })
+
+
+
 })
